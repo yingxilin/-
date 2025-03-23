@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车知识图谱问答系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-input {
+            border-radius: 20px;
+            padding: 10px 20px;
+        }
+
+        .btn-primary {
+            border-radius: 20px;
+            padding: 10px 30px;
+        }
+
+        .answer-box {
+            min-height: 100px;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            display: none;
+        }
+
+        .car-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">汽车知识图谱问答系统</h2>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="input-group mb-3">
+                        <input type="text" id="question" class="form-control question-input"
+                            placeholder="请输入您的问题（例如：宝马3系的价格）">
+                        <button class="btn btn-primary" onclick="askQuestion()">查询</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            可查询的车型
+                        </div>
+                        <div class="card-body car-list">
+                            {% for car in cars %}
+                            <div class="car-item">{{ car }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="answer" class="answer-box">
+                <div id="answer-content"></div>
+            </div>
+
+            <div class="mt-4">
+                <h5>支持的问题类型：</h5>
+                <ul>
+                    <li>XX的品牌</li>
+                    <li>XX的价格</li>
+                    <li>XX的发动机</li>
+                    <li>XX的变速箱</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function askQuestion() {
+            const question = document.getElementById('question').value;
+            if (!question) {
+                alert('请输入问题');
+                return;
+            }
+
+            fetch('/query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const answerBox = document.getElementById('answer');
+                    const answerContent = document.getElementById('answer-content');
+
+                    answerBox.style.display = 'block';
+                    if (data.status === 'success') {
+                        answerContent.innerHTML = `<div class="alert alert-success">${data.answer}</div>`;
+                    } else {
+                        answerContent.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const answerBox = document.getElementById('answer');
+                    const answerContent = document.getElementById('answer-content');
+                    answerBox.style.display = 'block';
+                    answerContent.innerHTML = '<div class="alert alert-danger">查询出错，请稍后重试</div>';
+                });
+        }
+
+        // 支持回车键提交
+        document.getElementById('question').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+
+</html>
